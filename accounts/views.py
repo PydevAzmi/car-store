@@ -1,6 +1,6 @@
-from rest_framework.response import Response
-from djoser.views import UserViewSet
 from django.conf import settings
+from djoser.views import UserViewSet
+from rest_framework.response import Response
 
 # Create your views here.
 

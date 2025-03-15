@@ -1,6 +1,6 @@
+from django.contrib.auth import get_user_model
 from django.db import models
 from django.utils.text import slugify
-from django.contrib.auth import get_user_model
 
 User = get_user_model()
 NEW = 'NEW'
@@ -34,7 +34,11 @@ class CategoryParent(models.Model):
 class Category(models.Model):
     name = models.CharField(max_length=255)
     parent = models.ForeignKey(
-        CategoryParent, on_delete=models.CASCADE, null=True, blank=True, related_name='children'
+        CategoryParent,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='children',
     )
     description = models.TextField(blank=True)
     slug = models.SlugField(unique=True, null=True, blank=True)

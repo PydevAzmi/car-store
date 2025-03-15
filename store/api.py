@@ -13,7 +13,8 @@
 
 
 from api.utils.response import APIResponse
-from api.views import ServerAPIView, PublicServerAPIView
+from api.views import PublicServerAPIView, ServerAPIView
+
 
 class Test(ServerAPIView):
     def get(self, request):
