@@ -140,6 +140,20 @@ class PartAdmin(admin.ModelAdmin):
     view_orders.short_description = 'Orders'
 
 
+@admin.register(CategoryParent)
+class CategoryParentAdmin(admin.ModelAdmin):
+    list_display = ('name', 'slug', 'child_categories_count', 'part_count')
+    prepopulated_fields = {'slug': ('name',)}
+    search_fields = ('name', 'description')
+    
+    def child_categories_count(self, obj):
+        return obj.children.count()
+    child_categories_count.short_description = 'Child Categories'
+    
+    def part_count(self, obj):
+        return obj.parts.count()
+    part_count.short_description = 'Parts'
+
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ('name', 'parent', 'slug', 'part_count')

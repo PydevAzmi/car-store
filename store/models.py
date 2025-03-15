@@ -21,10 +21,20 @@ STATUS_CHOICES = [
 ]
 
 
+class CategoryParent(models.Model):
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    slug = models.SlugField(unique=True, null=True, blank=True)
+
+    class Meta:
+        verbose_name_plural = "Categories Parents"
+        ordering = ['name']
+
+
 class Category(models.Model):
     name = models.CharField(max_length=255)
     parent = models.ForeignKey(
-        'self', on_delete=models.CASCADE, null=True, blank=True, related_name='children'
+        CategoryParent, on_delete=models.CASCADE, null=True, blank=True, related_name='children'
     )
     description = models.TextField(blank=True)
     slug = models.SlugField(unique=True, null=True, blank=True)
@@ -64,6 +74,9 @@ class Part(models.Model):
     trader = models.ForeignKey(User, on_delete=models.CASCADE, related_name='parts')
     category = models.ForeignKey(
         Category, on_delete=models.CASCADE, related_name='parts'
+    )
+    category_parent = models.ForeignKey(
+        CategoryParent, on_delete=models.CASCADE, related_name='parts'
     )
     name = models.CharField(max_length=255)
     description = models.TextField()
