@@ -28,9 +28,6 @@ class User(AbstractUser):
         'Location', on_delete=models.SET_NULL, null=True, blank=True
     )
     is_trader = models.BooleanField(default=False)
-    company_name = models.CharField(max_length=255, blank=True)
-    VAT_number = models.CharField(max_length=255, blank=True)
-    website = models.URLField(blank=True)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username', 'phone_number']
@@ -43,6 +40,9 @@ class TraderProfile(models.Model):
     user = models.OneToOneField(
         User, on_delete=models.CASCADE, related_name='trader_profile'
     )
+    company_name = models.CharField(max_length=255, blank=True)
+    VAT_number = models.CharField(max_length=255, blank=True)
+    website = models.URLField(blank=True)
     commission_rate = models.DecimalField(
         max_digits=5, decimal_places=2, default=10.0
     )  # Default commission %

@@ -2,6 +2,8 @@ from django.contrib.auth import get_user_model
 from django.db import models
 from django.utils.text import slugify
 
+from accounts.models import TraderProfile
+
 User = get_user_model()
 NEW = 'NEW'
 RESTOCK = 'RESTOCK'
@@ -75,7 +77,9 @@ class CarModel(models.Model):
 
 
 class Part(models.Model):
-    trader = models.ForeignKey(User, on_delete=models.CASCADE, related_name='parts')
+    trader = models.ForeignKey(
+        TraderProfile, on_delete=models.CASCADE, related_name='parts'
+    )
     category = models.ForeignKey(
         Category, on_delete=models.CASCADE, related_name='parts'
     )

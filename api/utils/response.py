@@ -6,12 +6,12 @@ from .messages import MESSAGES
 
 
 class APIResponse(Response):
-    default_status_code = status.HTTP_200_OK
-    default_detail = MESSAGES.get('DEFAULT_OKAY')
-
     """
     Alters the init arguments slightly of the Rest Framwork Response, to include a message.
     """
+
+    default_status_code = status.HTTP_200_OK
+    default_detail = MESSAGES.get('DEFAULT_OKAY')
 
     def __init__(self, status=None, detail=None, **payload):
         if status is None:

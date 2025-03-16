@@ -16,7 +16,7 @@ class TraderProfileAdmin(admin.ModelAdmin):
     list_filter = ('approved',)
 
     def total_parts(self, obj):
-        count = Part.objects.filter(trader=obj.user).count()
+        count = Part.objects.filter(trader=obj).count()
         return count
 
     total_parts.short_description = 'Total Parts'
