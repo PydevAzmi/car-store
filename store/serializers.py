@@ -27,9 +27,9 @@ class PartSerializer(serializers.ModelSerializer):
             'low_stock_threshold',
             'quantity',
             'is_featured',
-            'category__name',
-            'category_parent__name',
-            'trader__company_name',
+            'category',
+            'category_parent',
+            'trader',
             'created_at',
             'updated_at',
         ]
