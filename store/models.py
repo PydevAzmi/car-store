@@ -27,7 +27,8 @@ class CategoryParent(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     slug = models.SlugField(unique=True, null=True, blank=True)
-
+    icon = models.ImageField(upload_to='category_icons/', blank=True, null=True)
+    
     class Meta:
         verbose_name_plural = "Categories Parents"
         ordering = ['name']
@@ -61,7 +62,8 @@ class Brand(models.Model):
     name = models.CharField(max_length=255, unique=True)
     founded = models.PositiveIntegerField(null=True, blank=True)
     headquarters = models.CharField(max_length=255, blank=True)
-
+    icon = models.ImageField(upload_to='brand_icons/', blank=True, null=True)
+    
     def __str__(self):
         return self.name
 

@@ -1,4 +1,3 @@
-# PartSerializer, CategorySerializer, BrandSerializer, CarModelSerializer
 from rest_framework import serializers
 
 from .models import Brand, CarModel, Category, CategoryParent, Part, PartImage
@@ -38,7 +37,7 @@ class PartSerializer(serializers.ModelSerializer):
 class CategoryFilterSerializer(serializers.ModelSerializer):
     class Meta:
         model = CategoryParent
-        fields = ['id', 'name', 'slug']
+        fields = ['id', 'name', 'slug', 'icon']
 
 
 class SubCategoryFilterSerializer(serializers.ModelSerializer):
@@ -50,7 +49,7 @@ class SubCategoryFilterSerializer(serializers.ModelSerializer):
 class BrandFilterSerializer(serializers.ModelSerializer):
     class Meta:
         model = Brand
-        fields = ['id', 'name']
+        fields = ['id', 'name', 'icon']
 
 
 class CarModelFilterSerializer(serializers.ModelSerializer):
