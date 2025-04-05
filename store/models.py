@@ -1,8 +1,11 @@
+import uuid
+
 from django.contrib.auth import get_user_model
 from django.db import models
+from django.forms import ValidationError
 from django.utils.text import slugify
 
-from accounts.models import TraderProfile
+from accounts.models import Location, TraderProfile
 
 User = get_user_model()
 NEW = 'NEW'
@@ -22,16 +25,32 @@ STATUS_CHOICES = [
     ('CANCELLED', 'Cancelled'),
 ]
 
+SHIPPING_STATUS_CHOICES = [
+    ('PENDING', 'Pending'),
+    ('IN_PROGRESS', 'In Progress'),
+    ('DELIVERED', 'Delivered'),
+    ('RETURNED', 'Returned'),
+]
+
+PAYMENT_STATUS_CHOICES = [
+    ('PENDING', 'Pending'),
+    ('COMPLETED', 'Completed'),
+    ('FAILED', 'Failed'),
+]
+
 
 class CategoryParent(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     slug = models.SlugField(unique=True, null=True, blank=True)
     icon = models.ImageField(upload_to='category_icons/', blank=True, null=True)
-    
+
     class Meta:
         verbose_name_plural = "Categories Parents"
         ordering = ['name']
+
+    def __str__(self):
+        return self.name
 
 
 class Category(models.Model):
@@ -51,10 +70,10 @@ class Category(models.Model):
         ordering = ['name']
 
     def __str__(self):
-        return self.name
+        return f"{self.parent} - {self.name}"
 
     def save(self, *args, **kwargs):
-        self.slug = slugify(self.name)
+        self.slug = slugify(f"{self.parent} {self.name}")
         super().save(*args, **kwargs)
 
 
@@ -63,7 +82,7 @@ class Brand(models.Model):
     founded = models.PositiveIntegerField(null=True, blank=True)
     headquarters = models.CharField(max_length=255, blank=True)
     icon = models.ImageField(upload_to='brand_icons/', blank=True, null=True)
-    
+
     def __str__(self):
         return self.name
 
@@ -160,13 +179,17 @@ class InventoryLog(models.Model):
 
 
 class Order(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
     total = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    tracking_number = models.CharField(max_length=255, blank=True)
+    tracking_number = models.UUIDField(
+        default=uuid.uuid4().hex[:20].upper(), editable=False
+    )
     notes = models.TextField(blank=True)
+    commission = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
     def __str__(self):
         return self.tracking_number
@@ -175,10 +198,7 @@ class Order(models.Model):
         total_commission = 0
         for item in self.items.all():
             commission = (
-                item.quantity
-                * item.price
-                * item.supplier.trader_profile.commission_rate
-                / 100
+                item.quantity * item.price * item.part.trader.commission_rate / 100
             )
             total_commission += commission
         self.commission = total_commission  # Add a commission field to the Order model
@@ -190,14 +210,8 @@ class OrderItem(models.Model):
     part = models.ForeignKey(Part, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    supplier = models.ForeignKey(
-        User, on_delete=models.SET_NULL, null=True, related_name='order_items'
-    )
 
     def save(self, *args, **kwargs):
-        # Update inventory when order item is created
-        if not self.supplier:
-            self.supplier = self.part.trader
         if not self.pk:  # Only on creation
             self.part.quantity -= self.quantity
             self.part.save()
@@ -217,3 +231,68 @@ class StockReservation(models.Model):
     session_key = models.CharField(max_length=40)
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField()
+
+    def __str__(self):
+        return f"Reservation for {self.part.name} ({self.quantity})"
+
+
+class PaymentMethod(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField()
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+
+
+class Payment(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    order = models.OneToOneField(
+        Order, on_delete=models.CASCADE, related_name='payment'
+    )
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    payment_method = models.ForeignKey(PaymentMethod, on_delete=models.CASCADE)
+    status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    transaction_id = models.UUIDField(default=uuid.uuid4, editable=False)
+
+    def __str__(self):
+        return f"Payment for Order {self.order.id}"
+
+    def clean(self):
+        if self.amount != self.order.total:
+            raise ValidationError("Payment amount must match order total")
+
+
+class Shipping(models.Model):
+    order = models.OneToOneField(
+        Order, on_delete=models.CASCADE, related_name="shipping"
+    )
+    carrier = models.CharField(max_length=50)
+    status = models.CharField(max_length=20, choices=SHIPPING_STATUS_CHOICES)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    tracking_number = models.UUIDField(
+        default=uuid.uuid4().hex[:20].upper(), editable=False
+    )
+    estimated_delivery = models.DateField(null=True, blank=True)
+    shipping_address = models.ForeignKey(
+        Location,
+        on_delete=models.PROTECT,
+        related_name='shipments',
+        null=True,
+        blank=True,
+    )
+
+    def __str__(self):
+        return f"Shipping for Order {self.order.id}"
+
+    def save(self, *args, **kwargs):
+        if not self.shipping_address:
+            if not self.order.user.location:
+                raise ValidationError("Shipping address is required")
+            self.shipping_address = self.order.user.location
+        super().save(*args, **kwargs)

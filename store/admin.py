@@ -242,7 +242,7 @@ class CarModelAdmin(admin.ModelAdmin):
 class OrderItemInline(admin.TabularInline):
     model = OrderItem
     extra = 0
-    readonly_fields = ('part', 'quantity', 'price', 'supplier', 'line_total')
+    readonly_fields = ('part', 'quantity', 'price', 'line_total')
 
     def line_total(self, obj):
         return obj.price * obj.quantity
@@ -293,9 +293,15 @@ class OrderAdmin(admin.ModelAdmin):
 
 @admin.register(OrderItem)
 class OrderItemAdmin(admin.ModelAdmin):
-    list_display = ('order', 'part', 'quantity', 'price', 'total', 'supplier')
-    list_filter = ('order__status', 'supplier')
-    search_fields = ('order__id', 'part__name', 'supplier__username')
+    list_display = (
+        'order',
+        'part',
+        'quantity',
+        'price',
+        'total',
+    )
+    list_filter = ('order__status',)
+    search_fields = ('order__id', 'part__name')
 
     def total(self, obj):
         return obj.price * obj.quantity

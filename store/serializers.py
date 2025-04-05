@@ -37,13 +37,13 @@ class PartSerializer(serializers.ModelSerializer):
 class CategoryFilterSerializer(serializers.ModelSerializer):
     class Meta:
         model = CategoryParent
-        fields = ['id', 'name', 'slug', 'icon']
+        fields = ['id', 'name', 'icon']
 
 
 class SubCategoryFilterSerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = ['id', 'name', 'parent', 'slug']
+        fields = ['id', 'name', 'parent']
 
 
 class BrandFilterSerializer(serializers.ModelSerializer):
@@ -55,7 +55,7 @@ class BrandFilterSerializer(serializers.ModelSerializer):
 class CarModelFilterSerializer(serializers.ModelSerializer):
     class Meta:
         model = CarModel
-        fields = ['id', 'name', 'brand']
+        fields = ['id', 'name', 'brand', 'production_start', 'production_end']
 
 
 class CategoryParentSerializer(serializers.ModelSerializer):

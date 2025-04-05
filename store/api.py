@@ -79,7 +79,11 @@ part_detail = PartViewSet.as_view({'get': 'retrieve'})
 # filters
 class SubCategoryFiltersAPIView(ServerAPIView):
     def get(self, request):
-        categories = Category.objects.all()
+        parent = request.query_params.get('parentId')
+        if parent:
+            categories = Category.objects.filter(parent=parent)
+        else:
+            categories = Category.objects.all()
         serializer = SubCategoryFilterSerializer(categories, many=True)
         return APIResponse(data=serializer.data)
 
